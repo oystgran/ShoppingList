@@ -52,6 +52,10 @@ import {
   IonToolbar,
   IonTitle,
   IonContent,
+  IonItem,
+  IonInput,
+  IonList,
+  IonListHeader,
 } from "@ionic/vue";
 
 import { ref, computed } from "vue";
@@ -62,14 +66,31 @@ interface Item {
   done: boolean;
 }
 
+interface ShoppingList {
+  id: number;
+  name: string;
+  items: Item[];
+}
+
 const newItem = ref("");
-const items = ref<Item[]>([]);
+
+const lists = ref<ShoppingList[]>([
+  { id: 1, name: "Dagligvarer", items: [] },
+  { id: 2, name: "Hytte", items: [] },
+]);
+
+const activeListId = ref(1);
+
+const activeList = computed(() => {
+  return lists.value.find((list) => list.id === activeListId.value)!;
+});
 
 function addItem() {
+  const list = activeList.value;
   const text = newItem.value.trim();
   if (!text) return;
 
-  items.value.push({
+  list.items.push({
     id: Date.now(),
     text,
     done: false,
@@ -82,6 +103,8 @@ function toggle(item: Item) {
   item.done = !item.done;
 }
 
-const undoneItems = computed(() => items.value.filter((i) => !i.done));
-const doneItems = computed(() => items.value.filter((i) => i.done));
+const undoneItems = computed(() =>
+  activeList.value.items.filter((i) => !i.done)
+);
+const doneItems = computed(() => activeList.value.items.filter((i) => i.done));
 </script>
