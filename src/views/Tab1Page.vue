@@ -7,7 +7,25 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- Input for nytt item -->
+      <ion-segment v-model="activeListId">
+        <ion-segment-button
+          v-for="list in lists"
+          :key="list.id"
+          :value="list.id"
+        >
+          <ion-label>{{ list.name }}</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <ion-item>
+        <ion-input
+          v-model="newListName"
+          placeholder="Ny liste…"
+          @keyup.enter="addList"
+        ></ion-input>
+        <ion-button slot="end" @click="addList"> Legg til </ion-button>
+      </ion-item>
+
       <ion-item>
         <ion-input
           v-model="newItem"
@@ -56,6 +74,9 @@ import {
   IonInput,
   IonList,
   IonListHeader,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
 } from "@ionic/vue";
 
 import { ref, computed } from "vue";
@@ -73,6 +94,22 @@ interface ShoppingList {
 }
 
 const newItem = ref("");
+const newListName = ref("");
+
+function addList() {
+  const name = newListName.value.trim();
+  if (!name) return;
+
+  const id = Date.now();
+  lists.value.push({
+    id,
+    name,
+    items: [],
+  });
+
+  activeListId.value = id;
+  newListName.value = "";
+}
 
 const lists = ref<ShoppingList[]>([
   { id: 1, name: "Dagligvarer", items: [] },
