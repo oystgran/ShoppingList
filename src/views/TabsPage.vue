@@ -21,6 +21,7 @@ import {
   IonIcon,
   IonPage,
   IonRouterOutlet,
+  IonButton,
 } from "@ionic/vue";
 import { ellipse, square, triangle } from "ionicons/icons";
 </script>

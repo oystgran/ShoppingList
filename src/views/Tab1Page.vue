@@ -3,6 +3,12 @@
     <ion-header>
       <ion-toolbar>
         <ion-title>Shopping List</ion-title>
+
+        <ion-buttons slot="end">
+          <ion-button @click="deleteActiveList">
+            <ion-icon :icon="trash" />
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -77,9 +83,13 @@ import {
   IonSegment,
   IonSegmentButton,
   IonLabel,
+  IonButton,
+  IonButtons,
+  IonIcon,
 } from "@ionic/vue";
 
 import { ref, computed } from "vue";
+import { trash } from "ionicons/icons";
 
 interface Item {
   id: number;
@@ -109,6 +119,19 @@ function addList() {
 
   activeListId.value = id;
   newListName.value = "";
+}
+
+function deleteActiveList() {
+  if (lists.value.length <= 1) {
+    return;
+  }
+
+  const index = lists.value.findIndex((list) => list.id === activeListId.value);
+
+  if (index === -1) return;
+  lists.value.splice(index, 1);
+
+  activeListId.value = lists.value[0].id;
 }
 
 const lists = ref<ShoppingList[]>([
