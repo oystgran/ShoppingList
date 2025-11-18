@@ -88,7 +88,8 @@ import {
   IonIcon,
 } from "@ionic/vue";
 
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
+import { saveListsToFile, loadListsFromFile } from "@/utils/storage";
 import { trash } from "ionicons/icons";
 
 interface Item {
@@ -159,6 +160,15 @@ function addItem() {
   newItem.value = "";
 }
 
+onMounted(async () => {
+  const loaded = await loadListsFromFile();
+
+  if (loaded && loaded.length > 0) {
+    lists.value = loaded;
+    activeListId.value = loaded[0].id;
+  }
+});
+
 function toggle(item: Item) {
   item.done = !item.done;
 }
@@ -167,4 +177,11 @@ const undoneItems = computed(() =>
   activeList.value.items.filter((i) => !i.done)
 );
 const doneItems = computed(() => activeList.value.items.filter((i) => i.done));
+watch(
+  lists,
+  (value) => {
+    saveListsToFile(value);
+  },
+  { deep: true }
+);
 </script>
