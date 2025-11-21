@@ -176,7 +176,9 @@ function toggle(item: Item) {
 const undoneItems = computed(() =>
   activeList.value.items.filter((i) => !i.done)
 );
+
 const doneItems = computed(() => activeList.value.items.filter((i) => i.done));
+
 watch(
   lists,
   (value) => {
