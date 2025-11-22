@@ -92,6 +92,10 @@ import { ref, computed, onMounted, watch } from "vue";
 import { saveListsToFile, loadListsFromFile } from "@/utils/storage";
 import { trash } from "ionicons/icons";
 
+const lists = ref<ShoppingList[]>([]);
+
+const activeListId = ref<number | null>(null);
+
 interface Item {
   id: number;
   text: string;
@@ -106,6 +110,14 @@ interface ShoppingList {
 
 const newItem = ref("");
 const newListName = ref("");
+
+const undoneItems = computed(() =>
+  activeList.value ? activeList.value.items.filter((i) => !i.done) : []
+);
+
+const doneItems = computed(() =>
+  activeList.value ? activeList.value.items.filter((i) => i.done) : []
+);
 
 function addList() {
   const name = newListName.value.trim();
@@ -123,41 +135,32 @@ function addList() {
 }
 
 function deleteActiveList() {
-  if (lists.value.length <= 1) {
-    return;
-  }
-
   const index = lists.value.findIndex((list) => list.id === activeListId.value);
-
   if (index === -1) return;
+
   lists.value.splice(index, 1);
 
-  activeListId.value = lists.value[0].id;
+  if (lists.value.length > 0) {
+    activeListId.value = lists.value[0].id;
+  } else {
+    activeListId.value = null;
+  }
 }
 
-const lists = ref<ShoppingList[]>([
-  { id: 1, name: "Dagligvarer", items: [] },
-  { id: 2, name: "Hytte", items: [] },
-]);
-
-const activeListId = ref(1);
-
 const activeList = computed(() => {
-  return lists.value.find((list) => list.id === activeListId.value)!;
+  return lists.value.find((list) => list.id === activeListId.value);
 });
 
 function addItem() {
   const list = activeList.value;
   const text = newItem.value.trim();
-  if (!text) return;
+  if (!list || !text) return;
 
   list.items.push({
     id: Date.now(),
     text,
     done: false,
   });
-
-  newItem.value = "";
 }
 
 onMounted(async () => {
@@ -172,12 +175,6 @@ onMounted(async () => {
 function toggle(item: Item) {
   item.done = !item.done;
 }
-
-const undoneItems = computed(() =>
-  activeList.value.items.filter((i) => !i.done)
-);
-
-const doneItems = computed(() => activeList.value.items.filter((i) => i.done));
 
 watch(
   lists,
