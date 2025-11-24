@@ -38,6 +38,7 @@
           placeholder="Legg til vare…"
           @keyup.enter="addItem"
         ></ion-input>
+        <ion-button slot="end" @click="addItem"> Legg til </ion-button>
       </ion-item>
 
       <!-- Ugjort -->
@@ -94,7 +95,7 @@ import { trash } from "ionicons/icons";
 
 const lists = ref<ShoppingList[]>([]);
 
-const activeListId = ref<number | null>(null);
+const activeListId = ref<number | string>("");
 
 interface Item {
   id: number;
@@ -143,7 +144,7 @@ function deleteActiveList() {
   if (lists.value.length > 0) {
     activeListId.value = lists.value[0].id;
   } else {
-    activeListId.value = null;
+    activeListId.value = "";
   }
 }
 
@@ -161,6 +162,7 @@ function addItem() {
     text,
     done: false,
   });
+  
 }
 
 onMounted(async () => {
@@ -169,6 +171,8 @@ onMounted(async () => {
   if (loaded && loaded.length > 0) {
     lists.value = loaded;
     activeListId.value = loaded[0].id;
+  } else {
+    activeListId.value = "";
   }
 });
 
