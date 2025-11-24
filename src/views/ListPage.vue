@@ -44,26 +44,36 @@
       <!-- Ugjort -->
       <ion-list>
         <ion-list-header>Ukjøpt</ion-list-header>
-        <ion-item
-          v-for="item in undoneItems"
-          :key="item.id"
-          button
-          @click="toggle(item)"
-        >
-          {{ item.text }}
+        <ion-item v-for="item in undoneItems" :key="item.id" button>
+          <ion-label @click="toggle(item)">
+            {{ item.text }}
+          </ion-label>
+          <ion-button
+            slot="end"
+            fill="clear"
+            color="danger"
+            @click.stop="deleteItem(item)"
+          >
+            <ion-icon :icon="trash" />
+          </ion-button>
         </ion-item>
       </ion-list>
 
       <!-- Ferdig -->
       <ion-list>
         <ion-list-header>Kjøpt</ion-list-header>
-        <ion-item
-          v-for="item in doneItems"
-          :key="item.id"
-          button
-          @click="toggle(item)"
-        >
-          <s>{{ item.text }}</s>
+        <ion-item v-for="item in doneItems" :key="item.id" button>
+          <ion-label @click="toggle(item)">
+            <s>{{ item.text }}</s>
+          </ion-label>
+          <ion-button
+            slot="end"
+            fill="clear"
+            color="danger"
+            @click.stop="deleteItem(item)"
+          >
+            <ion-icon :icon="trash" />
+          </ion-button>
         </ion-item>
       </ion-list>
     </ion-content>
@@ -148,6 +158,16 @@ function deleteActiveList() {
   }
 }
 
+function deleteItem(item: Item) {
+  const list = activeList.value;
+  if (!list) return;
+
+  const index = list.items.findIndex((i) => i.id === item.id);
+  if (index === -1) return;
+
+  list.items.splice(index, 1);
+}
+
 const activeList = computed(() => {
   return lists.value.find((list) => list.id === activeListId.value);
 });
@@ -162,7 +182,6 @@ function addItem() {
     text,
     done: false,
   });
-  
 }
 
 onMounted(async () => {
