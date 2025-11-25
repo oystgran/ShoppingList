@@ -130,34 +130,34 @@ import { saveListsToFile, loadListsFromFile } from "@/utils/storage";
 import { trash } from "ionicons/icons";
 
 /* ---------------------------------------------------------
-   Refs og datastruktur
+   Refs and data structures
 --------------------------------------------------------- */
 
-// Alle lister lagres her
+// All shopping lists are stored here
 const lists = ref<ShoppingList[]>([]);
 
-// ID-en til lista som er valgt i segmentet
+// The ID of the currently selected list (from the segment)
 const activeListId = ref<number | string>("");
 
-// Type for hvert item i lista
+// Type for each item in a shopping list
 interface Item {
   id: number;
   text: string;
-  done: boolean; // true = kjøpt, false = ukjøpt
+  done: boolean; // true = purchased, false = not purchased
 }
 
-// Type for en hel handleliste
+// Type for an entire shopping list
 interface ShoppingList {
   id: number;
   name: string;
   items: Item[];
 }
 
-// Input-feltene for ny liste og nytt item
+// Input fields for new list and new item
 const newItem = ref("");
 const newListName = ref("");
 
-// Alert-styring
+// Alert state handling
 const isDeleteAlertOpen = ref(false);
 const isAddItemAlertOpen = ref(false);
 
@@ -165,30 +165,30 @@ const isAddItemAlertOpen = ref(false);
    Computed properties
 --------------------------------------------------------- */
 
-// Returnerer lista som er aktiv (eller undefined hvis ingen)
+// Returns the active list (or undefined if none is selected)
 const activeList = computed(() => {
   return lists.value.find((list) => list.id === activeListId.value);
 });
 
-// Items som ikke er kjøpt
+// Items that are not purchased
 const undoneItems = computed(() =>
   activeList.value ? activeList.value.items.filter((i) => !i.done) : []
 );
 
-// Items som er kjøpt
+// Items that are purchased
 const doneItems = computed(() =>
   activeList.value ? activeList.value.items.filter((i) => i.done) : []
 );
 
 /* ---------------------------------------------------------
-   Legge til ny liste
+   Add a new list
 --------------------------------------------------------- */
 
 function addList() {
   const name = newListName.value.trim();
   if (!name) return;
 
-  // Bruker timestamp som unik ID
+  // Use timestamp as unique ID
   const id = Date.now();
 
   lists.value.push({
@@ -197,26 +197,26 @@ function addList() {
     items: [],
   });
 
-  // Velg den nye lista automatisk
+  // Automatically select the newly created list
   activeListId.value = id;
 
-  // Tøm inputfelt
+  // Clear input
   newListName.value = "";
 }
 
 /* ---------------------------------------------------------
-   Slette en liste (bekreftes via popup)
+   Delete the active list (confirmed through popup)
 --------------------------------------------------------- */
 
 function deleteActiveList() {
-  // Finn lista basert på ID
+  // Find the list based on ID
   const index = lists.value.findIndex((list) => list.id === activeListId.value);
   if (index === -1) return;
 
-  // Fjern lista
+  // Remove the list
   lists.value.splice(index, 1);
 
-  // Velg en ny liste hvis det finnes noen igjen
+  // Select a new list if any exist
   if (lists.value.length > 0) {
     activeListId.value = lists.value[0].id;
   } else {
@@ -224,20 +224,20 @@ function deleteActiveList() {
   }
 }
 
-// Åpner sletteliste-popup
+// Opens the delete-list confirmation alert
 function openDeleteAlert() {
   if (!activeList.value) return;
   isDeleteAlertOpen.value = true;
 }
 
-// Knappene i sletteliste-popup
+// Buttons for the delete-list popup
 const alertButtons = [
   {
-    text: "Avbryt",
+    text: "Cancel",
     role: "cancel",
   },
   {
-    text: "Slett",
+    text: "Delete",
     role: "destructive",
     handler: () => {
       deleteActiveList();
@@ -246,7 +246,7 @@ const alertButtons = [
 ];
 
 /* ---------------------------------------------------------
-   Slette et item
+   Delete an item
 --------------------------------------------------------- */
 
 function deleteItem(item: Item) {
@@ -260,55 +260,55 @@ function deleteItem(item: Item) {
 }
 
 /* ---------------------------------------------------------
-   Legge til nytt item
+   Add a new item
 --------------------------------------------------------- */
 
 function addItem() {
   const list = activeList.value;
   const text = newItem.value.trim();
 
-  // Kan ikke legge til item uten aktiv liste
+  // Cannot add an item without an active list
   if (!list) {
     isAddItemAlertOpen.value = true;
     return;
   }
 
-  // Ikke legg til tom tekst
+  // Do not add empty text
   if (!text) return;
 
-  // Legg til nytt item i lista
+  // Add new item to the list
   list.items.push({
     id: Date.now(),
     text,
     done: false,
   });
 
-  // Tøm inputfelt
+  // Clear input
   newItem.value = "";
 }
 
 /* ---------------------------------------------------------
-   Fiks for å forhindre at fokus hopper til neste liste 
-   ved Enter trykk på Android keyboardet
+   Fix to prevent Android keyboard "Enter" from jumping 
+   to the next input field instead of adding the list
 --------------------------------------------------------- */
 
-// Brukes for å unngå at vi kaller addList() to ganger
+// Used to prevent addList() from being called twice
 const ignoreNextListBlur = ref(false);
 
-// Kalles når bruker trykker Enter (der det faktisk sendes keyup)
+// Called when Enter key is pressed (if keyup event is actually fired)
 function onListEnter(event: any) {
   ignoreNextListBlur.value = true;
 
-  // Prøv å stoppe default oppførsel
+  // Try to stop default behavior
   if (event?.preventDefault) event.preventDefault();
   if (event?.stopPropagation) event.stopPropagation();
 
   addList();
 }
 
-// Kalles når feltet mister fokus ved Enter trykk på Android on screen keyboard
+// Called when the field loses focus due to Android "Done" key
 function onListBlur() {
-  // Hvis vi nettopp håndterte Enter, skipper vi blur-kallet
+  // If Enter was just handled, skip blur-triggered add
   if (ignoreNextListBlur.value) {
     ignoreNextListBlur.value = false;
     return;
@@ -318,23 +318,23 @@ function onListBlur() {
 }
 
 /* ---------------------------------------------------------
-   Laste inn data når komponenten lastes
+   Load saved data when component loads
 --------------------------------------------------------- */
 
 onMounted(async () => {
-  // Hent lagrede lister fra fil via Capacitor Filesystem
+  // Load saved lists from Capacitor Filesystem
   const loaded = await loadListsFromFile();
 
   if (loaded && loaded.length > 0) {
     lists.value = loaded;
-    activeListId.value = loaded[0].id; // Velg første liste
+    activeListId.value = loaded[0].id; // Select first list
   } else {
     activeListId.value = "";
   }
 });
 
 /* ---------------------------------------------------------
-   Toggle item (kjøpt ↔ ukjøpt)
+   Toggle item state (purchased ↔ not purchased)
 --------------------------------------------------------- */
 
 function toggle(item: Item) {
@@ -342,14 +342,14 @@ function toggle(item: Item) {
 }
 
 /* ---------------------------------------------------------
-   Lagre lister automatisk når de endres
+   Automatically save lists whenever they change
 --------------------------------------------------------- */
 
 watch(
-  lists, // det vi overvåker
+  lists, // what we are watching
   (value) => {
-    saveListsToFile(value); // lagre til fil
+    saveListsToFile(value); // save to file
   },
-  { deep: true } // overvåk nested endringer i objekter
+  { deep: true } // watch nested changes inside objects
 );
 </script>
