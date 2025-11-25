@@ -5,7 +5,7 @@
         <ion-title>Shopping List</ion-title>
 
         <ion-buttons slot="end">
-          <ion-button @click="deleteActiveList">
+          <ion-button @click="openDeleteAlert" :disabled="!activeList">
             <ion-icon :icon="trash" />
           </ion-button>
         </ion-buttons>
@@ -29,7 +29,6 @@
           placeholder="Ny liste…"
           @keyup.enter="addList"
         ></ion-input>
-        <ion-button slot="end" @click="addList"> Legg til </ion-button>
       </ion-item>
 
       <ion-item>
@@ -38,14 +37,18 @@
           placeholder="Legg til vare…"
           @keyup.enter="addItem"
         ></ion-input>
-        <ion-button slot="end" @click="addItem"> Legg til </ion-button>
       </ion-item>
 
       <!-- Ugjort -->
       <ion-list>
         <ion-list-header>Ukjøpt</ion-list-header>
-        <ion-item v-for="item in undoneItems" :key="item.id" button>
-          <ion-label @click="toggle(item)">
+        <ion-item
+          v-for="item in undoneItems"
+          :key="item.id"
+          button
+          @click="toggle(item)"
+        >
+          <ion-label>
             {{ item.text }}
           </ion-label>
           <ion-button
@@ -62,8 +65,13 @@
       <!-- Ferdig -->
       <ion-list>
         <ion-list-header>Kjøpt</ion-list-header>
-        <ion-item v-for="item in doneItems" :key="item.id" button>
-          <ion-label @click="toggle(item)">
+        <ion-item
+          v-for="item in doneItems"
+          :key="item.id"
+          button
+          @click="toggle(item)"
+        >
+          <ion-label>
             <s>{{ item.text }}</s>
           </ion-label>
           <ion-button
@@ -76,6 +84,22 @@
           </ion-button>
         </ion-item>
       </ion-list>
+      <ion-alert
+        :is-open="isDeleteAlertOpen"
+        header="Slett liste"
+        :message="`Er du sikker på at du vil slette lista «${
+          activeList?.name ?? ''
+        }»?`"
+        :buttons="alertButtons"
+        @didDismiss="isDeleteAlertOpen = false"
+      />
+      <ion-alert
+        :is-open="isAddItemAlertOpen"
+        header="Ingen liste valgt"
+        message="Du må velge eller opprette en liste før du kan legge til en vare."
+        :buttons="['OK']"
+        @didDismiss="isAddItemAlertOpen = false"
+      />
     </ion-content>
   </ion-page>
 </template>
@@ -97,6 +121,7 @@ import {
   IonButton,
   IonButtons,
   IonIcon,
+  IonAlert,
 } from "@ionic/vue";
 
 import { ref, computed, onMounted, watch } from "vue";
@@ -121,6 +146,8 @@ interface ShoppingList {
 
 const newItem = ref("");
 const newListName = ref("");
+const isDeleteAlertOpen = ref(false);
+const isAddItemAlertOpen = ref(false);
 
 const undoneItems = computed(() =>
   activeList.value ? activeList.value.items.filter((i) => !i.done) : []
@@ -158,6 +185,25 @@ function deleteActiveList() {
   }
 }
 
+function openDeleteAlert() {
+  if (!activeList.value) return;
+  isDeleteAlertOpen.value = true;
+}
+
+const alertButtons = [
+  {
+    text: "Avbryt",
+    role: "cancel",
+  },
+  {
+    text: "Slett",
+    role: "destructive",
+    handler: () => {
+      deleteActiveList();
+    },
+  },
+];
+
 function deleteItem(item: Item) {
   const list = activeList.value;
   if (!list) return;
@@ -175,13 +221,21 @@ const activeList = computed(() => {
 function addItem() {
   const list = activeList.value;
   const text = newItem.value.trim();
-  if (!list || !text) return;
+
+  if (!list) {
+    isAddItemAlertOpen.value = true;
+    return;
+  }
+
+  if (!text) return;
 
   list.items.push({
     id: Date.now(),
     text,
     done: false,
   });
+
+  newItem.value = "";
 }
 
 onMounted(async () => {
